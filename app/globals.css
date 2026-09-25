@@ -1,0 +1,9 @@
+/* These three directives are how Tailwind actually injects its CSS —
+   at build time, Tailwind replaces these lines with the real generated
+   stylesheet (base resets, then component classes, then all the
+   utility classes you used). Nothing else needs to go in this file
+   for now; once we lock in the visual design, shared custom styles
+   (fonts, any non-Tailwind CSS) will live here too. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

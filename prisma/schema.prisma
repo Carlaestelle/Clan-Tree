@@ -1,0 +1,165 @@
+// This file defines the shape of the database. Prisma reads it and
+// generates a fully-typed client (the `prisma.person.findMany(...)` style
+// API) so we get autocomplete and compile-time errors instead of writing
+// raw SQL strings by hand.
+//
+// Workflow while learning this:
+//   1. Edit this file.
+//   2. Run `npx prisma migrate dev --name some_description_of_the_change`.
+//      This creates a SQL migration file AND applies it to your Neon
+//      database AND regenerates the client, all in one command.
+//   3. Run `npx prisma studio` any time you want a spreadsheet-like GUI
+//      to browse/edit the data in your browser — great for sanity checks.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Prisma reads the connection string from the DATABASE_URL environment
+  // variable (see .env.example) rather than having it hardcoded here —
+  // that's what keeps the real password out of version control.
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------
+// PERSON
+// ---------------------------------------------------------------------
+// One row per clan member. This is both a "user" (they can log in) and
+// a "node" in the family tree (they have parents/children/a spouse) —
+// we don't split those into two tables because in this app every person
+// in the tree IS a person who can log in, so keeping it one table avoids
+// having to keep two records in sync.
+model Person {
+  id        String   @id @default(cuid())
+
+  firstName String
+  lastName  String
+
+  // Login credential. Generated as firstName + first letter of lastName
+  // (e.g. "Carla" + "Achebe" -> "carlaa"), lowercased, with a number
+  // appended on collision (see scripts/seed.ts for the exact logic).
+  username     String  @unique
+  passwordHash String
+
+  // Forces a password change on first login. Useful because in this
+  // app many people may start out sharing a family word as a password —
+  // this flag makes sure that stops being true after their first visit.
+  mustChangePassword Boolean @default(true)
+
+  // Optional, and deliberately a plain nullable enum rather than
+  // required: some records (or historical figures with little known
+  // about them) may not have this set. The relationship engine (see
+  // lib/relationship.ts) falls back to a gender-neutral term like
+  // "grandparent" whenever this is null, so leaving it unset never
+  // breaks anything — it just produces a less specific label.
+  gender Gender?
+
+  // --- Biographical info, shown on the individual's page ---
+  birthDate DateTime?
+  deathDate DateTime? // null = still living
+  bio       String?   @db.Text
+  photoUrl  String?   // URL from Vercel Blob once we wire up uploads
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Family tree relationships ---
+  //
+  // A person can have 0-2 parents and any number of children. We model
+  // that as a *self-relation* through the join model `Parentage` below,
+  // rather than two nullable "motherId"/"fatherId" columns, because:
+  //   - it doesn't force a gendered "mother/father" split, and
+  //   - it naturally supports step-parents / more than 2 parents later
+  //     if the tree ever needs that, with no schema change.
+  //
+  // "parentOf" = edges where THIS person is the parent.
+  // "childOf"  = edges where THIS person is the child.
+  parentOf Parentage[] @relation("ParentEdges")
+  childOf  Parentage[] @relation("ChildEdges")
+
+  // Spouse/partner links. Modeled as a self-relation too (see `Marriage`
+  // below) rather than a single "spouseId" column, so the same person
+  // can have more than one recorded marriage over time (e.g. remarriage)
+  // without us needing to throw away history.
+  marriagesAsPartnerA Marriage[] @relation("PartnerA")
+  marriagesAsPartnerB Marriage[] @relation("PartnerB")
+
+  // Every relation needs a field on BOTH sides in Prisma's schema
+  // language (even though the database itself only stores the foreign
+  // key on the TimelineEvent row) — this is what lets us later write
+  // `prisma.person.findUnique(...).timelineEvents` and get typed results.
+  timelineEvents TimelineEvent[]
+}
+
+// ---------------------------------------------------------------------
+// PARENTAGE (join table: one row per parent -> child edge)
+// ---------------------------------------------------------------------
+// Why a separate model instead of a plain many-to-many `@relation`?
+// Because Prisma's implicit many-to-many can't tell "parent" apart from
+// "child" — we need a DIRECTED edge (A is the parent OF B, not just
+// "A and B are related"), so we make the join table explicit.
+model Parentage {
+  id String @id @default(cuid())
+
+  parent   Person @relation("ParentEdges", fields: [parentId], references: [id])
+  parentId String
+
+  child   Person @relation("ChildEdges", fields: [childId], references: [id])
+  childId String
+
+  // A given parent->child edge should only exist once.
+  @@unique([parentId, childId])
+}
+
+// ---------------------------------------------------------------------
+// MARRIAGE (join table: one row per recorded marriage/partnership)
+// ---------------------------------------------------------------------
+model Marriage {
+  id String @id @default(cuid())
+
+  partnerA   Person @relation("PartnerA", fields: [partnerAId], references: [id])
+  partnerAId String
+
+  partnerB   Person @relation("PartnerB", fields: [partnerBId], references: [id])
+  partnerBId String
+
+  startDate DateTime? // wedding date, if known
+  endDate   DateTime? // null = still married (or n/a)
+
+  @@unique([partnerAId, partnerBId])
+}
+
+// ---------------------------------------------------------------------
+// TIMELINE EVENT
+// ---------------------------------------------------------------------
+// Independent of individual people — this powers the clan-wide history
+// timeline (your two reference styles: an "older times" vintage look and
+// a "more modern times" editorial look). `era` picks which visual style
+// a given event renders with; `person` optionally links an event to the
+// person it's about, so we can cross-link from a timeline card to their
+// profile page.
+model TimelineEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  eventDate   DateTime // use Jan 1st of the year if only a year is known
+  era         Era      @default(MODERN)
+  imageUrl    String?
+  sortOrder   Int      @default(0) // lets us manually reorder same-date events
+
+  person   Person? @relation(fields: [personId], references: [id])
+  personId String?
+}
+
+enum Era {
+  OLDER
+  MODERN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
