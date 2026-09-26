@@ -1,20 +1,35 @@
 import type { Config } from "tailwindcss";
 
+function withOpacity(cssVariable: string) {
+  return ({ opacityValue }: { opacityValue?: string }) => {
+    if (opacityValue !== undefined) {
+      return `rgb(var(${cssVariable}) / ${opacityValue})`;
+    }
+    return `rgb(var(${cssVariable}))`;
+  };
+}
+
 const config: Config = {
-  // Tailwind scans these files at build time to figure out which
-  // utility classes you actually used, and only ships CSS for those —
-  // if a folder with classes isn't listed here, its styles get silently
-  // dropped in production. Add new folders here as the project grows.
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
-      // Placeholder — once we lock in the visual design from your
-      // reference images, the clan's palette and fonts will live here
-      // (e.g. colors.ink, colors.parchment, fontFamily.display) so every
-      // component pulls from the same named tokens instead of one-off hex codes.
+      colors: {
+        void: withOpacity("--color-void"),
+        ink: withOpacity("--color-ink"),
+        charcoal: withOpacity("--color-charcoal"),
+        ash: withOpacity("--color-ash"),
+        mist: withOpacity("--color-mist"),
+        bone: withOpacity("--color-bone"),
+        paper: withOpacity("--color-paper"),
+        signal: withOpacity("--color-signal"),
+      } as any,
+      fontFamily: {
+        display: ["var(--font-fraunces)", "serif"],
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [],
