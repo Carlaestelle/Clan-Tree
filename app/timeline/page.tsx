@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic'; //to remove error on Vercel deployment:
 export default async function TimelinePage() {
   const events = await prisma.timelineEvent.findMany({
     orderBy: [{ eventDate: "asc" }, { sortOrder: "asc" }],

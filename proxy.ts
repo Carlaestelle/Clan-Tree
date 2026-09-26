@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 // NextAuth's session check, so `req.nextauth.token` is already
 // populated (or null) by the time our callback runs.
 export default withAuth(
-  function middleware(req) {
+  function proxy(req) {
     const token = req.nextauth.token;
     const isChangePasswordPage = req.nextUrl.pathname === "/change-password";
 
