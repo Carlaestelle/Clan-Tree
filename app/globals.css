@@ -4,6 +4,43 @@
    utility classes you used). Nothing else needs to go in this file
    for now; once we lock in the visual design, shared custom styles
    (fonts, any non-Tailwind CSS) will live here too. */
+/* stylelint-disable at-rule-no-unknown */
+/* csslint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-void: 5 5 5;
+  --color-ink: 17 17 17;
+  --color-charcoal: 42 42 42;
+  --color-ash: 120 120 120;
+  --color-mist: 200 199 195;
+  --color-bone: 232 231 227;
+  --color-paper: 247 246 243;
+  --color-signal: 255 255 255;
+}
+
+body {
+  @apply bg-paper text-ink font-sans;
+}
+
+@layer components {
+  .bg-vignette {
+    background-image: radial-gradient(
+      ellipse at center,
+      rgb(var(--color-ink)) 0%,
+      rgb(var(--color-void)) 100%
+    );
+  }
+
+  .divider-fade {
+    height: 1px;
+    background-image: linear-gradient(
+      to right,
+      transparent,
+      rgb(var(--color-charcoal)),
+      transparent
+    );
+  }
+}
