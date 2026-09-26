@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export const dynamic = 'force-dynamic'; //to remove error on Vercel deployment:
+export const dynamic = 'force-dynamic'; //tells Next "always render this fresh, per request" instead of trying to pre-bake it — which also means a future build won't fail just because the database was briefly unreachable
 export default async function TimelinePage() {
   const events = await prisma.timelineEvent.findMany({
     orderBy: [{ eventDate: "asc" }, { sortOrder: "asc" }],
