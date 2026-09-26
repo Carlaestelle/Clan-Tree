@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -37,13 +38,6 @@ export default function ChangePasswordPage() {
       return;
     }
 
-    // The API call above updated the DATABASE, but the session cookie
-    // (a signed JWT) still has the old mustChangePassword: true baked
-    // in from sign-in time — cookies don't magically re-read the
-    // database. Calling update() re-runs the jwt() callback in
-    // lib/auth.ts with trigger: "update", which is what actually
-    // refreshes the cookie. Without this line, middleware.ts would
-    // keep redirecting back here in a loop.
     await update({ mustChangePassword: false });
     router.push("/");
   }
@@ -62,11 +56,9 @@ export default function ChangePasswordPage() {
 
         <label className="flex flex-col gap-1">
           <span className="text-sm">New password</span>
-          <input
-            type="password"
-            className="border rounded px-3 py-2"
+          <PasswordInput
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={setNewPassword}
             minLength={8}
             required
           />
@@ -74,11 +66,9 @@ export default function ChangePasswordPage() {
 
         <label className="flex flex-col gap-1">
           <span className="text-sm">Confirm new password</span>
-          <input
-            type="password"
-            className="border rounded px-3 py-2"
+          <PasswordInput
             value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
+            onChange={setConfirm}
             minLength={8}
             required
           />

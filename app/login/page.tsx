@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/components/PasswordInput";
 
 // This has to be a Client Component ("use client" above) because it
 // uses useState (to track the form fields and any error) and calls
@@ -20,10 +21,6 @@ export default function LoginPage() {
     setSubmitting(true);
     setError(null);
 
-    // redirect: false means signIn() returns a result object instead
-    // of immediately navigating — that lets US decide what happens
-    // next (show an error vs. redirect), rather than NextAuth doing an
-    // automatic redirect to a generic error page.
     const result = await signIn("credentials", {
       username,
       password,
@@ -37,11 +34,8 @@ export default function LoginPage() {
       return;
     }
 
-    // Successful login. Send them home — middleware.ts will
-    // automatically bounce them to /change-password first if their
-    // account still has mustChangePassword set.
     router.push("/");
-    router.refresh(); // makes sure server components re-read the new session
+    router.refresh();
   }
 
   return (
@@ -65,11 +59,9 @@ export default function LoginPage() {
 
         <label className="flex flex-col gap-1">
           <span className="text-sm">Password</span>
-          <input
-            type="password"
-            className="border rounded px-3 py-2"
+          <PasswordInput
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             autoComplete="current-password"
             required
           />
