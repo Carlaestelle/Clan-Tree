@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { describeRelationship } from "@/lib/relationship";
+import { fullName } from "@/lib/formatName";
 
 export default async function PersonPage({
   params,
@@ -35,7 +36,7 @@ export default async function PersonPage({
           design, the photo, name, and bio below get the real
           collage/editorial treatment instead of plain stacked text. */}
       <h1 className="text-2xl font-semibold">
-        {person.firstName} {person.lastName}
+        {fullName(person)}
       </h1>
 
       {relationship && (
@@ -48,7 +49,7 @@ export default async function PersonPage({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={person.photoUrl}
-          alt={`${person.firstName} ${person.lastName}`}
+          alt={fullName(person)}
           className="w-48 h-48 object-cover rounded"
         />
       )}

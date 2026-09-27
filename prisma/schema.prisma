@@ -35,7 +35,7 @@ model Person {
   id        String   @id @default(cuid())
 
   firstName String
-  lastName  String
+  lastName  String?
 
   // Login credential. Generated as firstName + first letter of lastName
   // (e.g. "Carla" + "Achebe" -> "carlaa"), lowercased, with a number

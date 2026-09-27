@@ -4,11 +4,12 @@ import { useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html, Line } from "@react-three/drei";
 import { useRouter } from "next/navigation";
+import { fullName } from "@/lib/formatName";
 
 interface Person {
   id: string;
   firstName: string;
-  lastName: string;
+  lastName?: string | null;
 }
 
 interface Parentage {
@@ -188,7 +189,7 @@ export default function FamilyTree3D({
           </mesh>
           <Html center distanceFactor={10}>
             <span className="text-xs whitespace-nowrap text-white bg-black/70 px-1 rounded">
-              {p.firstName} {p.lastName}
+              {fullName(p)}
             </span>
           </Html>
         </group>

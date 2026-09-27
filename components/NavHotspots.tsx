@@ -17,21 +17,21 @@ export default function NavHotspots({ personId }: { personId: string }) {
   const [litIndex, setLitIndex] = useState<number | null>(null);
 
   const branches: Branch[] = [
-    { label: "Family tree", href: "/tree", tipX: 16, tipY: 20, path: "M 50 60 Q 28 45 16 20" },
-    { label: "Timeline", href: "/timeline", tipX: 38, tipY: 6, path: "M 50 60 Q 40 35 38 6" },
-    { label: "Your page", href: `/person/${personId}`, tipX: 64, tipY: 6, path: "M 50 60 Q 60 35 64 6" },
-    { label: "Sign out", action: () => signOut(), tipX: 86, tipY: 20, path: "M 50 60 Q 72 45 86 20" },
+    { label: "Family tree", href: "/tree", tipX: 16, tipY: 20, path: "M 100 60 Q 56 45 32 20" },
+    { label: "Timeline", href: "/timeline", tipX: 38, tipY: 6, path: "M 100 60 Q 80 35 76 6" },
+    { label: "Your page", href: `/person/${personId}`, tipX: 64, tipY: 6, path: "M 100 60 Q 120 35 128 6" },
+    { label: "Sign out", action: () => signOut(), tipX: 86, tipY: 20, path: "M 100 60 Q 144 45 172 20" },
   ];
 
   return (
     <div className="relative w-full max-w-2xl aspect-[2/1] mx-auto">
       <svg
-        viewBox="0 0 100 100"
+        viewBox="0 0 200 100"
         aria-hidden="true"
         className="absolute inset-0 w-full h-full"
       >
         <path
-          d="M 50 100 L 50 60"
+          d="M 100 100 L 100 60"
           fill="none"
           stroke="rgb(var(--color-charcoal))"
           strokeWidth={0.6}
@@ -51,7 +51,7 @@ export default function NavHotspots({ personId }: { personId: string }) {
           />
         ))}
 
-        <circle cx={50} cy={100} r={1.4} fill="rgb(var(--color-charcoal))" />
+        <circle cx={100} cy={100} r={2.8} fill="rgb(var(--color-charcoal))" />
       </svg>
 
       {branches.map((branch, i) => {

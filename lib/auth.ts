@@ -2,6 +2,7 @@ import { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { fullName } from "@/lib/formatName";
 
 // This object is the whole NextAuth setup. We import it in two places:
 //   - app/api/auth/[...nextauth]/route.ts, so NextAuth can handle
@@ -63,7 +64,7 @@ export const authOptions: NextAuthOptions = {
         // token that round-trips with every request.
         return {
           id: person.id,
-          name: `${person.firstName} ${person.lastName}`,
+          name: fullName(person),
           username: person.username,
           mustChangePassword: person.mustChangePassword,
         };
