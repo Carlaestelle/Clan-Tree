@@ -2,7 +2,7 @@
 
 import { PrismaClient, Era } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import * as XLSX from "xlsx";
+import * as XLSX from "@e965/xlsx";
 
 const prisma = new PrismaClient();
 const TEMP_PASSWORD = "aparticularword";
