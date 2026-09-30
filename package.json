@@ -10,21 +10,20 @@
     "prisma:studio": "prisma studio",
     "seed": "tsx scripts/seed.ts",
     "postinstall": "prisma generate",
-    "seed": "tsx scripts/seed.ts",
     "import": "tsx scripts/import-from-excel.ts"
   },
   "dependencies": {
+    "@e965/xlsx": "0.20.3",
     "@prisma/client": "5.17.0",
     "@react-three/drei": "9.122.0",
     "@react-three/fiber": "8.16.8",
     "bcryptjs": "2.4.3",
     "gsap": "3.12.5",
-    "next": "14.2.34",
+    "next": "^16.3.8",
     "next-auth": "4.24.15",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "three": "0.166.1",
-    "@e965/xlsx": "0.20.3"
+    "three": "0.166.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "2.4.6",
@@ -32,7 +31,7 @@
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.19",
-    "postcss": "8.4.40",
+    "postcss": "^8.5.28",
     "prisma": "5.17.0",
     "tailwindcss": "3.4.6",
     "tsx": "4.20.6",

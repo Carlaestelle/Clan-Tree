@@ -1,5 +1,5 @@
-const FAMILY_NAME = "[Family name]";
-const PRIMARY_CONTRIBUTORS = ["[James Kazimoto]", "[Nderakindo Perpetua]"];
+const FAMILY_NAME = "[Mbatia]";
+const PRIMARY_CONTRIBUTORS = ["James Kazimoto", "Nderakindo Perpetua"];
 const ALSO_THANKS = "and members of the wider family for additional details";
 
 export default function Footer() {
