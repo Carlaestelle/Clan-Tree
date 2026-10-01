@@ -10,7 +10,7 @@ const TEMP_PASSWORD = "aparticularword";
 interface PersonRow {
   Key: string;
   FirstName: string;
-  LastName: string;
+  LastName?: string;
   Gender?: string;
   BirthDate?: string;
   DeathDate?: string;
@@ -21,6 +21,7 @@ interface PersonRow {
 }
 
 interface TimelineRow {
+  Key: string;
   Title: string;
   Description?: string;
   EventDate?: string;
@@ -29,8 +30,9 @@ interface TimelineRow {
   SortOrder?: number;
 }
 
-function makeUsername(firstName: string, lastName: string, taken: Set<string>): string {
-  const fullBase = firstName.toLowerCase() + lastName[0].toLowerCase();
+function makeUsername(firstName: string, lastName: string | undefined, taken: Set<string>): string {
+  const lastInitial = lastName && lastName.length > 0 ? lastName[0].toLowerCase() : "";
+  const fullBase = firstName.toLowerCase() + lastInitial;
   let candidate = fullBase;
   let suffix = 2;
   while (taken.has(candidate)) {
@@ -79,12 +81,14 @@ async function main() {
   console.log(`Found ${personRows.length} people to import.`);
 
   const passwordHash = await bcrypt.hash(TEMP_PASSWORD, 10);
-  const usedUsernames = new Set<string>();
+
+  const existingPeople = await prisma.person.findMany({ select: { username: true } });
+  const usedUsernames = new Set(existingPeople.map((p) => p.username));
   const idByKey = new Map<string, string>();
 
   for (const row of personRows) {
-    if (!row.Key || !row.FirstName || !row.LastName) {
-      console.warn(`Skipping a row missing Key/FirstName/LastName:`, row);
+    if (!row.Key || !row.FirstName) {
+      console.warn(`Skipping a row missing Key/FirstName:`, row);
       continue;
     }
 
@@ -92,24 +96,31 @@ async function main() {
     const gender =
       genderRaw === "M" ? "MALE" : genderRaw === "F" ? "FEMALE" : genderRaw === "O" ? "OTHER" : undefined;
 
+    const biographicalFields = {
+      firstName: row.FirstName,
+      lastName: row.LastName,
+      gender,
+      birthDate: parseDate(row.BirthDate),
+      deathDate: parseDate(row.DeathDate),
+      bio: row.Bio,
+    };
+
     const username = makeUsername(row.FirstName, row.LastName, usedUsernames);
 
-    const created = await prisma.person.create({
-      data: {
-        firstName: row.FirstName,
-        lastName: row.LastName,
+    const person = await prisma.person.upsert({
+      where: { sourceKey: row.Key },
+      update: biographicalFields,
+      create: {
+        ...biographicalFields,
+        sourceKey: row.Key,
         username,
         passwordHash,
         mustChangePassword: true,
-        gender,
-        birthDate: parseDate(row.BirthDate),
-        deathDate: parseDate(row.DeathDate),
-        bio: row.Bio,
       },
     });
 
-    idByKey.set(row.Key, created.id);
-    console.log(`  ${row.FirstName} ${row.LastName} -> username "${username}"`);
+    idByKey.set(row.Key, person.id);
+    console.log(`  ${row.FirstName} ${row.LastName ?? ""} -> ${person.username}`);
   }
 
   for (const row of personRows) {
@@ -123,7 +134,11 @@ async function main() {
         console.warn(`  Row "${row.Key}": parent key "${parentKey}" not found — skipping that link.`);
         continue;
       }
-      await prisma.parentage.create({ data: { parentId, childId } });
+      await prisma.parentage.upsert({
+        where: { parentId_childId: { parentId, childId } },
+        update: {},
+        create: { parentId, childId },
+      });
     }
   }
 
@@ -142,31 +157,44 @@ async function main() {
       if (createdMarriages.has(pairKey)) continue;
       createdMarriages.add(pairKey);
 
-      await prisma.marriage.create({ data: { partnerAId: idA, partnerBId: idB } });
+      await prisma.marriage.upsert({
+        where: { partnerAId_partnerBId: { partnerAId: idA, partnerBId: idB } },
+        update: {},
+        create: { partnerAId: idA, partnerBId: idB },
+      });
     }
   }
 
   if (timelineSheet) {
     const eventRows = XLSX.utils.sheet_to_json<TimelineRow>(timelineSheet).filter(
-      (row) => row.Title && row.Title !== "Family arrives in Dar es Salaam"
+      (row) => row.Key && row.Key !== "example-event"
     );
 
     console.log(`Found ${eventRows.length} timeline events to import.`);
 
     for (const row of eventRows) {
+      if (!row.Key || !row.Title) {
+        console.warn(`Skipping a timeline row missing Key/Title:`, row);
+        continue;
+      }
+
       const eventDate = parseDate(row.EventDate) ?? new Date();
       const era: Era = row.Era?.trim().toUpperCase() === "OLDER" ? "OLDER" : "MODERN";
       const personId = row.PersonKey ? idByKey.get(row.PersonKey.trim()) : undefined;
 
-      await prisma.timelineEvent.create({
-        data: {
-          title: row.Title,
-          description: row.Description ?? "",
-          eventDate,
-          era,
-          personId,
-          sortOrder: row.SortOrder ?? 0,
-        },
+      const eventFields = {
+        title: row.Title,
+        description: row.Description ?? "",
+        eventDate,
+        era,
+        personId,
+        sortOrder: row.SortOrder ?? 0,
+      };
+
+      await prisma.timelineEvent.upsert({
+        where: { sourceKey: row.Key },
+        update: eventFields,
+        create: { ...eventFields, sourceKey: row.Key },
       });
     }
   }
