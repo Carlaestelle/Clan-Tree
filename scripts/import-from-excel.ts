@@ -65,7 +65,7 @@ async function main() {
     process.exit(1);
   }
 
-  const workbook = XLSX.readFile(filePath);
+  const workbook = XLSX.readFile(filePath, { cellDates: true });
 
   const peopleSheet = workbook.Sheets["People"];
   const timelineSheet = workbook.Sheets["Timeline"];

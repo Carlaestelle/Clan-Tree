@@ -51,7 +51,7 @@ export default function NavHotspots({ personId }: { personId: string }) {
           />
         ))}
 
-        <circle cx={100} cy={100} r={2.8} fill="rgb(var(--color-charcoal))" />
+        <circle cx={100} cy={97} r={2.8} fill="rgb(var(--color-charcoal))" />
       </svg>
 
       {branches.map((branch, i) => {
